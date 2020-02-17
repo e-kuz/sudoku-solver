@@ -22,7 +22,6 @@ for sudoku in range(len(sudoku_lis)):
     else:
         sudoku_lis[sudoku] = sudoku_lis[sudoku][1:]
 
-print(len(sudoku_lis))
 
 
 # init array with all the numbers that are still possible for each cell
@@ -39,8 +38,8 @@ def fill_with_lists_of_posible_nums(sudoku):
     return possible
 
 
-# cancel values in same row
-def cli(possible):
+# manage numbers in same row 
+def manage_row(possible):
     for row in range(9):
         nums_already_in_line = []
         whole_line = ""
@@ -63,8 +62,8 @@ def cli(possible):
                         possible[row][column] = str(anumber)
 
 
-# cancel values in same column
-def csp(possible):
+# manage numbers in same column
+def manage_column(possible):
     for column in range(9):
         nums_already_in_column = []
         whole_column = ""
@@ -87,8 +86,8 @@ def csp(possible):
                         possible[row][column] = str(anumber)
 
 
-# cancel values in same square
-def cq(possible):
+# manage numbers in same square
+def manage_square(possible):
     nums_already_in_square = []
     whole_square = []
     for square in range(9):
@@ -125,7 +124,7 @@ def cq(possible):
 
 # backtracking: for every cell with only 2 possible numbers
 # try choosing each number and see if it solves
-def prob(possible):
+def backtracking_for_two_numbers(possible):
     backup = copy.deepcopy(possible)
     for row in range(9):
         for column in range(9):
@@ -143,7 +142,7 @@ def prob(possible):
 # count how many cells with only one possible number there are
 # needed for the solve function, as a sudoku is solved, when there is 1 possible number
 # in all 81 cells
-def count(possible):
+def count_possible(possible):
     sum_of_possible = 0
     for row in range(9):
         for column in range(9):
@@ -154,22 +153,21 @@ def count(possible):
 
 def solve(possible):
     x = 0
-    while count(possible) > x:
-        x = count(possible)
-        cli(possible)
-        csp(possible)
-        cq(possible)
-    return count(possible) == 81
+    while count_possible(possible) > x:
+        x = count_possible(possible)
+        manage_row(possible)
+        manage_column(possible)
+        manage_square(possible)
+    return count_possible(possible) == 81
 
 
 
 project_euler_answer = 0
 for i in range(50):
-    
     sudoku = sudoku_lis[i]
     possible = fill_with_lists_of_posible_nums(sudoku)
     if not solve(possible):
-        possible = prob(possible)
+        possible = backtracking_for_two_numbers(possible)
         
     proj_euler_sub_answer = int(possible[0][0] + possible[0][1] + possible[0][2])
     project_euler_answer += proj_euler_sub_answer
