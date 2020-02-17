@@ -1,4 +1,4 @@
-#reading file
+# reading file
 import pprint
 import copy
 
@@ -9,169 +9,170 @@ import copy
 
 # Reading in sudokus, stripping whitespaces, formatting
 file = open("p096_sudoku.txt", "r")
-sudoku_str =  file.read()
-sudoku_str = sudoku_str.replace("\"","")
+sudoku_str = file.read()
+sudoku_str = sudoku_str.replace("\"", "")
 sudoku_lis = sudoku_str.split("Grid ")
-sudoku_lis=sudoku_lis[1:]
+sudoku_lis = sudoku_lis[1:]
 for sudoku in range(len(sudoku_lis)):
-    sudoku_lis[sudoku]=sudoku_lis[sudoku][2:]
-    sudoku_lis[sudoku]=sudoku_lis[sudoku].split("\n")
+    sudoku_lis[sudoku] = sudoku_lis[sudoku][2:]
+    sudoku_lis[sudoku] = sudoku_lis[sudoku].split("\n")
     # remove line break after each sudoku but the last
-    if sudoku!=49:
-        sudoku_lis[sudoku]=sudoku_lis[sudoku][1:-1]
+    if sudoku != 49:
+        sudoku_lis[sudoku] = sudoku_lis[sudoku][1:-1]
     else:
-         sudoku_lis[sudoku]=sudoku_lis[sudoku][1:]
-        
+        sudoku_lis[sudoku] = sudoku_lis[sudoku][1:]
 
 print(len(sudoku_lis))
+
 
 # init array with all the numbers that are still possible for each cell
 # if nothing is there, at the beginning every number from 1  to 9 is possible
 # else the number is already given and we take that
 def fill_with_lists_of_posible_nums(sudoku):
- possible =[[[]for i in range(9)] for j in range(9)]
- for row in range(9):
-    for column in range(9):
-        if sud[row][column]!='0':
-            possible[row][column]=sud[row][column]
-        else:
-            possible[row][column]='123456789'
- return possible
-        
-        
-#cancel values in same row
+    possible = [[[] for i in range(9)] for j in range(9)]
+    for row in range(9):
+        for column in range(9):
+            if sudoku[row][column] != '0':
+                possible[row][column] = sudoku[row][column]
+            else:
+                possible[row][column] = '123456789'
+    return possible
+
+
+# cancel values in same row
 def cli(possible):
- for row in range(9):
-    nums_in_line=[]
-    wholeline=""
+    for row in range(9):
+        nums_already_in_line = []
+        whole_line = ""
+        for column in range(9):
+            possible_nums_for_cell = possible[row][column]
+            # if exactly 1 number is possible in this cell, it must be in the line
+            if len(possible_nums_for_cell) == 1:
+                nums_already_in_line.append(possible_nums_for_cell)
+        for column in range(9):
+            # if a number is already somewhere in the line, remove it from the possible numbers for this cell
+            if len(possible[row][column]) != 1:
+                for k in nums_already_in_line:
+                    possible[row][column] = possible[row][column].replace(k, "")
+            whole_line += possible[row][column]
+        # if a num only appears once in the whole line, it must be in the cell where it appears
+        for anumber in range(1, 10):
+            if whole_line.count(str(anumber)) == 1:
+                for column in range(9):
+                    if str(anumber) in possible[row][column]:
+                        possible[row][column] = str(anumber)
+
+
+# cancel values in same column
+def csp(possible):
     for column in range(9):
-        el=possible[row][column]
-        # if exactly 1 number is possible, it must be in the line
-        if len(el)==1:
-            nums_in_line.append(el)
-    for column in range(9):        
-        if len(possible[row][column])!=1:
-            for k in nums_in_line:
-                possible[row][column] = possible[row][column].replace(k,"")
-        wholeline += possible[row][column]
-    for anumber in range(1,10):
-        if wholeline.count(str(anumber)) ==1:
-            for column in range(9):
-                if str(anumber) in possible[row][column]:
-                    possible[row][column]=str(anumber)
-            
-
-        
-#cancel values in same column
-def csp(av):
- for j in range(9):
-    inl=[]
-    wholeline=""
-    for i in range(9):
-        el=av[i][j]
-        if len(el)==1:
-            inl.append(el)
-    for i in range(9):        
-        if len(av[i][j])!=1:
-            for k in inl:
-                av[i][j] = av[i][j].replace(k,"")
-        wholeline += av[i][j]
-    for anumber in range(1,10):
-        if wholeline.count(str(anumber)) ==1:
-            for i in range(9):
-                if str(anumber) in av[i][j]:
-                    av[i][j]=str(anumber)
-               
+        nums_already_in_column = []
+        whole_column = ""
+        for row in range(9):
+            possible_nums_for_cell = possible[row][column]
+            # if exactly 1 number is possible in this cell, it must be in the column
+            if len(possible_nums_for_cell) == 1:
+                nums_already_in_column.append(possible_nums_for_cell)
+        for row in range(9):
+            # if a number is already somewhere in the column, remove it from the possible numbers for this cell
+            if len(possible[row][column]) != 1:
+                for k in nums_already_in_column:
+                    possible[row][column] = possible[row][column].replace(k, "")
+            whole_column += possible[row][column]
+        # if a num only appears once in the whole column, it must be in the cell where it appears
+        for anumber in range(1, 10):
+            if whole_column.count(str(anumber)) == 1:
+                for row in range(9):
+                    if str(anumber) in possible[row][column]:
+                        possible[row][column] = str(anumber)
 
 
-#cancel values in same square
-def cq(av):
- inq=[]
- wholeq=[]
- for q in range(9):
-    inq.append([])
-    wholeq.append("")
- for i in range(9):
-    for j in range(9):
-        q=divmod(i,3)[0]*3+divmod(j,3)[0]
-        if len(av[i][j]) ==1:
-            inq[q].append(av[i][j])
+# cancel values in same square
+def cq(possible):
+    nums_already_in_square = []
+    whole_square = []
+    for square in range(9):
+        nums_already_in_square.append([])
+        whole_square.append("")
+    for row in range(9):
+        for column in range(9):
+            square = (row//3) * 3 + column//3
+            # if exactly 1 number is possible in this cell, it must be in the square
+            if len(possible[row][column]) == 1:
+                nums_already_in_square[square].append(possible[row][column])
 
- for i in range(9):
-    for j in range(9):
-        q=divmod(i,3)[0]*3+divmod(j,3)[0]
-        if len(av[i][j]) !=1:
-             for k in inq[q]:
-                 av[i][j] = av[i][j].replace(k,"")
-        wholeq[q] += av[i][j]
- for i in range(9):
-    for j in range(9):
-        q=divmod(i,3)[0]*3+divmod(j,3)[0]
-        for anumber in range(1,10):
-            if wholeq[q].count(str(anumber)) ==1:
-               for i2 in range(9):
-                   for j2 in range(9):
-                       q2=divmod(i2,3)[0]*3+divmod(j2,3)[0]
-                       if q2==q and str(anumber) in av[i2][j2]:
-                         av[i2][j2]=str(anumber)
+    for row in range(9):
+        for column in range(9):
+            square = (row//3) * 3 + column//3
+            if len(possible[row][column]) != 1:
+                # if a number is already somewhere in the square, remove it from the possible numbers for this cell
+                for num in nums_already_in_square[square]:
+                    possible[row][column] = possible[row][column].replace(num, "")
+            whole_square[square] += possible[row][column]
+    for row in range(9):
+        for column in range(9):
+            square = (row//3) * 3 + column//3
+            # if a num only appears once in the whole square, it must be in the cell where it appears
+            for anumber in range(1, 10):
+                if whole_square[square].count(str(anumber)) == 1:
+                    #finding where it appears
+                    for row2 in range(9):
+                        for column2 in range(9):
+                            square2 = (row2//3) * 3 + column2//3
+                            if square2 == square and str(anumber) in possible[row2][column2]:
+                                possible[row2][column2] = str(anumber)
 
-#try out choosing a value and see if it solves
-def prob(av):
- backup=copy.deepcopy(av)
- for i in range(9):
-    for j in range(9):
-        av=copy.deepcopy(backup)
-        if len(av[i][j])==2:               
-               av[i][j]=av[i][j][0]
-               if solve(av)==1:
-                   #pprint.pprint(av)
-                   return av              
-               else:
-                    av=copy.deepcopy(backup)
-                    av[i][j]=av[i][j][1]
-                    if solve(av)==1:
-                        #pprint.pprint(av)
-                        return av
 
- 
-                 
-def count(av):
-    ssum=0
-    for i in range(9):
-        for j in range(9):
-            if len(av[i][j]) ==1:
-                ssum+=1
-    return ssum
+# backtracking: for every cell with only 2 possible numbers
+# try choosing each number and see if it solves
+def prob(possible):
+    backup = copy.deepcopy(possible)
+    for row in range(9):
+        for column in range(9):
+            possible = copy.deepcopy(backup)
+            if len(possible[row][column]) == 2:
+                possible[row][column] = possible[row][column][0]
+                if solve(possible) == 1:
+                    return possible
+                else:
+                    possible = copy.deepcopy(backup)
+                    possible[row][column] = possible[row][column][1]
+                    if solve(possible) == 1:
+                        return possible
+
+# count how many cells with only one possible number there are
+# needed for the solve function, as a sudoku is solved, when there is 1 possible number
+# in all 81 cells
+def count(possible):
+    sum_of_possible = 0
+    for row in range(9):
+        for column in range(9):
+            if len(possible[row][column]) == 1:
+                sum_of_possible += 1
+    return sum_of_possible
+
+
+def solve(possible):
+    x = 0
+    while count(possible) > x:
+        x = count(possible)
+        cli(possible)
+        csp(possible)
+        cq(possible)
+    return count(possible) == 81
 
 
 
-
-def solve(av):
-    x=0
-    while count(av)>x:
-        x=count(av)
-        cli(av)
-        csp(av)
-        cq(av)
-    if count(av)==81:
-        return 1
-
-    else:
-        return 0
-
-answer = 0
+project_euler_answer = 0
 for i in range(50):
-    print("Sudoku ",i)
-    sud=sudoku_lis[i]
-    av=fill_with_lists_of_posible_nums(sud)
-    if solve(av)==1:                    
-        #pprint.pprint(av)
-        print("\n\n")
-    else:
-        #pprint.pprint(av)
-        av = prob(av)
-    num=int(av[0][0]+av[0][1]+av[0][2])
-    print(num)
-    answer+=num
+    
+    sudoku = sudoku_lis[i]
+    possible = fill_with_lists_of_posible_nums(sudoku)
+    if not solve(possible):
+        possible = prob(possible)
+        
+    proj_euler_sub_answer = int(possible[0][0] + possible[0][1] + possible[0][2])
+    project_euler_answer += proj_euler_sub_answer
+    print("Sudoku", i,": ",proj_euler_sub_answer)
 
-print(answer)
+print(project_euler_answer)
